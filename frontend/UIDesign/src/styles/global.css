@@ -1,0 +1,40 @@
+/* src/styles/global.css */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f8f9fa;
+}
+
+.hero-section {
+  background-color: #0d6efd;
+  color: white;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.hero-section h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+
+.category-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin: 40px 0 20px;
+  text-align: center;
+}
+
+.category-card {
+  padding: 20px;
+  text-align: center;
+  border-radius: 12px;
+  background-color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.category-card:hover {
+  transform: scale(1.03);
+}
