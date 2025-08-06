@@ -84,9 +84,11 @@ const adminSignup = async (req, res) => {
 //  ADMIN LOGIN
 const adminLogin = async (req, res) => {
   const { email, password } = req.body;
+   console.log('adnibnn')
 
   try {
     const admin = await Admin.findOne({ email });
+   
     if (!admin)
       return res.status(401).json({ message: " Admin not found" });
 

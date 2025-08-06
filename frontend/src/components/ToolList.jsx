@@ -19,7 +19,7 @@ function ToolList() {
       if (deployed) params.deployed = deployed;
       if (sort) params.sort = sort;
 
-      const res = await axios.get("http://localhost:5000/api/tools", {
+      const res = await axios.get("http://localhost:1000/api/tools", {
         params,
       });
       setTools(res.data);

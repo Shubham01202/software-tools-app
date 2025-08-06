@@ -89,7 +89,7 @@ function EditToolModal({ show, onClose, tool, onSave }) {
 
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/tools/${tool._id}`,
+        `http://localhost:1000/api/tools/${tool._id}`,
         updatedTool
       );
       if (res.status === 200) {

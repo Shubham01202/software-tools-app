@@ -65,7 +65,7 @@ function AddToolModal({ show, onClose, onToolAdded }) {
     };
 
     try {
-      const res = await axios.post("http://localhost:5000/api/tools", newTool);
+      const res = await axios.post("http://localhost:1000/api/tools", newTool);
       if (res.status === 201 && res.data) {
         onToolAdded(res.data);
         onClose();

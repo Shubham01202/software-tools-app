@@ -15,7 +15,7 @@ function AdminAuth({ onLogin }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = `http://localhost:5000/api/admin/${isLogin ? "login" : "signup"}`;
+    const url = `http://localhost:1000/api/admin/${isLogin ? "login" : "signup"}`;
 
     try {
       const res = await axios.post(url, formData);
