@@ -193,16 +193,19 @@ No extra explanation or headings.
         )
       );
 
-      await axios.put`https://software-tools-app-2.onrender.com/api/tools/${tool._id}`,
- {
-        keyFeatures: features,
-      });
-    } catch (err) {
-      alert("Failed to generate key features.");
-    } finally {
-      setAiLoadingId(null);
+  try {
+  await axios.put(
+    `https://software-tools-app-2.onrender.com/api/tools/${tool._id}`,
+    {
+      keyFeatures: features,
     }
-  };
+  );
+} catch (err) {
+  alert("Failed to generate key features.");
+} finally {
+  setAiLoadingId(null);
+}
+
   const parseMarkdownTable = (text) => {
     const lines = text
       .split("\n")
