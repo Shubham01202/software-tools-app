@@ -39,9 +39,9 @@ function NavbarComponent() {
     e.preventDefault();
     setError("");
 
-    const url = isLogin
-      ? "http://localhost:5000/api/admin/login"
-      : "http://localhost:5000/api/admin/signup";
+   const url = isLogin
+  ? "https://software-tools-app-2.onrender.com/api/admin/login"
+  : "https://software-tools-app-2.onrender.com/api/admin/signup";
 
     const payload = isLogin
       ? { email: formData.email, password: formData.password }
