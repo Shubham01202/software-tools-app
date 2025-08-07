@@ -101,7 +101,8 @@ Each feature must include a short, one-line description in the 'Short Descriptio
 ⚠️ Only return the markdown table rows. No headings, no bullet points, no extra explanation. Do not use bold or other formatting.
 `;
 
-        const res1 = await axios.post("http://localhost:1000/api/openai/chat", {
+        const res1 = await axios.post("https://software-tools-app-2.onrender.com/api/openai/chat"
+ {
           prompt: prompt1,
         });
 
@@ -131,7 +132,8 @@ Return the output as a plain markdown table with two columns only:
 Do not use bold text or markdown formatting.
 `;
 
-        const res2 = await axios.post("http://localhost:1000/api/openai/chat", {
+        const res2 = await axios.post("https://software-tools-app-2.onrender.com/api/openai/chat"
+ {
           prompt: prompt2,
         });
         setSimilarTable(res2.data.reply);
@@ -147,7 +149,8 @@ Do not use bold text or markdown formatting.
 
   const fetchTools = async () => {
     try {
-      const res = await axios.get("http://localhost:1000/api/tools");
+      const res = await axios.get("https://software-tools-app-2.onrender.com/api/tools
+");
       setTools(res.data);
     } catch (err) {
       console.error("Error fetching tools:", err.message);
@@ -159,7 +162,8 @@ Do not use bold text or markdown formatting.
   const handleDelete = async (toolId) => {
     if (!window.confirm("Delete this tool?")) return;
     try {
-      await axios.delete(`http://localhost:1000/api/tools/${toolId}`);
+      await axios.delete`https://software-tools-app-2.onrender.com/api/tools/${toolId}`
+;
       setTools((prev) => prev.filter((tool) => tool._id !== toolId));
     } catch (err) {
       alert("Failed to delete tool");
@@ -200,7 +204,8 @@ Do not use bold text or markdown formatting.
     setChatLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:1000/api/openai/chat", {
+      const res = await axios.post("https://software-tools-app-2.onrender.com/api/openai/chat"
+, {
         prompt: promptToSend,
       });
       setMessages((prev) => [...prev, { sender: "bot", text: res.data.reply }]);
@@ -218,7 +223,8 @@ Do not use bold text or markdown formatting.
     setAiLoadingId(tool._id);
     try {
       const prompt = `Generate 3-5 key features for the software tool named "${tool.name}" by "${tool.vendor}" in the category "${tool.category}". Return as a numbered list.`;
-      const res = await axios.post("http://localhost:1000/api/openai/chat", {
+      const res = await axios.post("https://software-tools-app-2.onrender.com/api/openai/chat",
+ {
         prompt,
       });
       const handleChatSubmit = async () => {
@@ -230,7 +236,8 @@ Do not use bold text or markdown formatting.
 
         try {
           const res = await axios.post(
-            "http://localhost:1000/api/openai/chat",
+           "https://software-tools-app-2.onrender.com/api/openai/chat",
+
             {
               prompt: chatInput,
             }
@@ -261,7 +268,8 @@ Do not use bold text or markdown formatting.
         )
       );
 
-      await axios.put(`http://localhost:1000/api/tools/${tool._id}`, {
+      await axios.put`https://software-tools-app-2.onrender.com/api/tools/${tool._id}`,
+ {
         keyFeatures: features,
       });
     } catch (err) {
