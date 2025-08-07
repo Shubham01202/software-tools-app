@@ -1,12 +1,46 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Container,
+  Button,
+  Table,
+  Spinner,
+  Modal,
+  Form,
+  InputGroup,
+} from "react-bootstrap";
 import axios from "axios";
+import html2pdf from "html2pdf.js";
+import EditToolModal from "../components/EditToolModal";
+import AddToolModal from "../components/AddToolModal";
+import { useNavigate } from "react-router-dom";
 
-const AdminPanel = () => {
+function AdminPanel() {
+  const [tools, setTools] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editTool, setEditTool] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [compareTools, setCompareTools] = useState([]);
+  const [showChat, setShowChat] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const [aiLoadingId, setAiLoadingId] = useState(null);
+  const [expandedFeatures, setExpandedFeatures] = useState({});
   const [featureTable, setFeatureTable] = useState("");
   const [similarTable, setSimilarTable] = useState("");
   const [featureTableLoading, setFeatureTableLoading] = useState(false);
   const [similarTableLoading, setSimilarTableLoading] = useState(false);
+
+  const chatBottomRef = useRef(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchTools();
+  }, []);
+
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   useEffect(() => {
     const fetchComparisonTables = async () => {
@@ -31,51 +65,59 @@ The table must have the following format:
 ${headerLine}
 ${separatorLine}
 
-Each row = one key feature.
-Use ✅ or ❌ for each tool.
-Each row must include a short description of the feature in the last column.
-No unnecessary explanations.
+Each row = one key feature. For each tool column, use only ✅ (for Yes) or ❌ (for No) based on feature availability.
+
+Each feature must include a short, one-line description in the 'Short Description' column.
+
+⚠️ Only return the markdown table rows. No headings, no bullet points, no extra explanation. Do not use bold or other formatting.
 `;
 
+        const res1 = await axios.post("https://software-tools-app-2.onrender.com/api/openai/chat", {
+          prompt: prompt1,
+        });
+
+        setFeatureTable(res1.data.reply);
+      } catch (err) {
+        console.error("Failed to fetch key features:", err);
+      } finally {
+        setFeatureTableLoading(false);
+      }
+
+      try {
         const prompt2 = `
-You are a product analyst.
+You are a software analyst.
 
-Generate a markdown table listing 3 similar products for each of these tools: ${names}.
+For each of the following tools: ${names}, list 3 similar software products currently available in the market. Do not include the original tools.
 
-Format:
+For each similar product, include:
+1. Similar Product Name
+2. A short description (1-2 lines)
+
+Return the output as a plain markdown table with two columns only:
 
 | Similar Product | Short Description |
 |-----------------|-------------------|
 
-Group them by tool internally. Do not repeat the tool names.
-No extra explanation or headings.
+Do not use bold text or markdown formatting.
 `;
 
-        const res1 = await axios.post("http://localhost:1000/api/openai/generate", {
-          prompt: prompt1,
-        });
-
-        const res2 = await axios.post("http://localhost:1000/api/openai/generate", {
+        const res2 = await axios.post("https://software-tools-app-2.onrender.com/api/openai/chat", {
           prompt: prompt2,
         });
-
-        setFeatureTable(res1.data.table || res1.data);
-        setSimilarTable(res2.data.table || res2.data);
+        setSimilarTable(res2.data.reply);
       } catch (err) {
-        console.error("AI table fetch error:", err);
+        console.error("Failed to fetch similar products:", err);
       } finally {
-        setFeatureTableLoading(false);
         setSimilarTableLoading(false);
       }
     };
-
 
     fetchComparisonTables();
   }, [compareTools]);
 
   const fetchTools = async () => {
     try {
-  const res = await axios.get("https://software-tools-app-2.onrender.com/api/tools");
+      const res = await axios.get("https://software-tools-app-2.onrender.com/api/tools");
       setTools(res.data);
     } catch (err) {
       console.error("Error fetching tools:", err.message);
@@ -87,8 +129,7 @@ No extra explanation or headings.
   const handleDelete = async (toolId) => {
     if (!window.confirm("Delete this tool?")) return;
     try {
-      await axios.delete`https://software-tools-app-2.onrender.com/api/tools/${toolId}`
-;
+      await axios.delete(`https://software-tools-app-2.onrender.com/api/tools/${toolId}`);
       setTools((prev) => prev.filter((tool) => tool._id !== toolId));
     } catch (err) {
       alert("Failed to delete tool");
@@ -129,8 +170,7 @@ No extra explanation or headings.
     setChatLoading(true);
 
     try {
-      const res = await axios.post("https://software-tools-app-2.onrender.com/api/openai/chat"
-, {
+      const res = await axios.post("https://software-tools-app-2.onrender.com/api/openai/chat", {
         prompt: promptToSend,
       });
       setMessages((prev) => [...prev, { sender: "bot", text: res.data.reply }]);
@@ -148,39 +188,9 @@ No extra explanation or headings.
     setAiLoadingId(tool._id);
     try {
       const prompt = `Generate 3-5 key features for the software tool named "${tool.name}" by "${tool.vendor}" in the category "${tool.category}". Return as a numbered list.`;
-      const res = await axios.post("https://software-tools-app-2.onrender.com/api/openai/chat",
- {
+      const res = await axios.post("https://software-tools-app-2.onrender.com/api/openai/chat", {
         prompt,
       });
-      const handleChatSubmit = async () => {
-        if (!chatInput.trim()) return;
-
-        setMessages((prev) => [...prev, { sender: "user", text: chatInput }]);
-        setChatInput("");
-        setChatLoading(true);
-
-        try {
-          const res = await axios.post(
-           "https://software-tools-app-2.onrender.com/api/openai/chat",
-
-            {
-              prompt: chatInput,
-            }
-          );
-
-          setMessages((prev) => [
-            ...prev,
-            { sender: "bot", text: res.data.reply },
-          ]);
-        } catch (error) {
-          setMessages((prev) => [
-            ...prev,
-            { sender: "bot", text: "Something went wrong!" },
-          ]);
-        } finally {
-          setChatLoading(false);
-        }
-      };
 
       const features = res.data.reply
         .split("\n")
@@ -193,16 +203,15 @@ No extra explanation or headings.
         )
       );
 
-  try {
-  await axios.put(`https://software-tools-app-2.onrender.com/api/tools/${tool._id}`, {
-    keyFeatures: features,
-  });
-} catch (err) {
-  alert("Failed to generate key features.");
-} finally {
-  setAiLoadingId(null);
-}
-
+      await axios.put(`https://software-tools-app-2.onrender.com/api/tools/${tool._id}`, {
+        keyFeatures: features,
+      });
+    } catch (err) {
+      alert("Failed to generate key features.");
+    } finally {
+      setAiLoadingId(null);
+    }
+  };
 
   const parseMarkdownTable = (text) => {
     const lines = text
@@ -240,6 +249,7 @@ No extra explanation or headings.
   const isBulletList = (text) => {
     return text.split("\n").every((line) => line.trim().match(/^[-*•]\s+/));
   };
+
   const renderFormattedList = (text) => {
     const lines = text
       .split("\n")
@@ -269,7 +279,6 @@ No extra explanation or headings.
     return <div className="mt-1">{text}</div>;
   };
 
-  // ✅ Export table as PDF utility (ALAG function)
   const exportTableAsPDF = (id, filename) => {
     const element = document.getElementById(id);
     if (!element) return alert("Table not found");
@@ -284,12 +293,11 @@ No extra explanation or headings.
 
     html2pdf().set(opt).from(element).save();
   };
+
   const renderMarkdownTable = (markdownText) => {
     if (!markdownText || markdownText.trim() === "") return null;
 
     const parsed = parseMarkdownTable(markdownText);
-    console.log("abcd", parsed);
-    
     if (!parsed) return null;
 
     const { headers, rows } = parsed;
@@ -306,18 +314,21 @@ No extra explanation or headings.
       : headers.map((_, i) => i);
 
     const filteredHeaders = desiredIndexes.map((i) => headers[i]);
-    console.log('filettte',filteredHeaders)
     const filteredRows = rows.map((row) => desiredIndexes.map((i) => row[i]));
 
     return (
       <Table striped bordered responsive size="sm" className="text-start mt-2">
         <thead>
           <tr>
-            {filteredHeaders.length>2?filteredHeaders.map((header, i) => (
-              <th style={{background:"#0000000d"}} key={i}>{header} </th>
-            )):filteredHeaders.map((header, i) => (
-              <td key={i}>{header}</td>
-            ))}
+            {filteredHeaders.length > 2
+              ? filteredHeaders.map((header, i) => (
+                  <th style={{ background: "#0000000d" }} key={i}>
+                    {header}
+                  </th>
+                ))
+              : filteredHeaders.map((header, i) => (
+                  <td key={i}>{header}</td>
+                ))}
           </tr>
         </thead>
         <tbody>
@@ -326,13 +337,12 @@ No extra explanation or headings.
               {row.map((cell, colIndex) => {
                 const value = cell.toLowerCase().trim();
 
-                // ✅ Green Tick / Red Cross rendering
                 if (value === "yes") {
                   return (
                     <td
                       key={colIndex}
                       className="text-center"
-                      style={{ color: "green", fontWeight: "bold", }}
+                      style={{ color: "green", fontWeight: "bold" }}
                     >
                       ✅
                     </td>
@@ -357,6 +367,7 @@ No extra explanation or headings.
       </Table>
     );
   };
+
   const markdownToCSV = (markdownText) => {
     if (!markdownText || !markdownText.includes("|")) return "";
 
@@ -420,9 +431,6 @@ No extra explanation or headings.
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Welcome to the Admin Panel</h2>
         <div className="d-flex gap-2 flex-wrap">
-          {/* <Button variant="outline-primary" onClick={() => setShowChat(true)}>
-          Chat with AI 🤖
-        </Button> */}
           <Button
             variant="outline-success"
             onClick={() => setShowAddModal(true)}
@@ -564,7 +572,6 @@ No extra explanation or headings.
         </Table>
       )}
 
-      {/* Comparison Section */}
       {compareTools.length >= 2 && (
         <div className="mt-4">
           <div className="d-flex justify-content-between align-items-center mb-2">
@@ -586,7 +593,6 @@ No extra explanation or headings.
               >
                 📥 Export CSV
               </Button>
-
               <Button
                 variant="outline-danger"
                 size="sm"
@@ -602,7 +608,6 @@ No extra explanation or headings.
           </div>
 
           <div id="combined-comparison">
-            {/* Basic Comparison Table */}
             <div className="mb-5">
               <h5 className="mb-2">Basic Comparison</h5>
               <div id="basic-comparison">
@@ -639,7 +644,6 @@ No extra explanation or headings.
               </div>
             </div>
 
-            {/* Key Features Table */}
             <div className="mb-5">
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <h4 className="mb-0">🔑 Key Features</h4>
@@ -659,7 +663,6 @@ No extra explanation or headings.
               </div>
             </div>
 
-            {/* Similar Products Table */}
             <div className="mb-5">
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <h4 className="mb-0">🧩 Similar Products</h4>
@@ -682,14 +685,12 @@ No extra explanation or headings.
         </div>
       )}
 
-      {/* Add Tool Modal */}
       <AddToolModal
         show={showAddModal}
         onClose={() => setShowAddModal(false)}
         onToolAdded={handleAddTool}
       />
 
-      {/* Edit Tool Modal */}
       {editTool && (
         <EditToolModal
           show={!!editTool}
@@ -698,7 +699,7 @@ No extra explanation or headings.
           onSave={handleUpdate}
         />
       )}
-      {/* ✅ Responsive Floating ChatBox */}
+
       <div
         className="chat-box shadow"
         style={{
@@ -718,7 +719,6 @@ No extra explanation or headings.
           boxShadow: "0 0 20px rgba(0,0,0,0.2)",
         }}
       >
-        {/* Header */}
         <div
           className="chat-header d-flex justify-content-between align-items-center p-2"
           style={{
@@ -737,7 +737,6 @@ No extra explanation or headings.
           </Button>
         </div>
 
-        {/* Messages */}
         <div
           className="chat-messages p-2"
           style={{
@@ -770,7 +769,6 @@ No extra explanation or headings.
           <div ref={chatBottomRef} />
         </div>
 
-        {/* Input */}
         <InputGroup className="p-2 border-top">
           <Form.Control
             placeholder="Ask something..."
@@ -787,7 +785,7 @@ No extra explanation or headings.
           </Button>
         </InputGroup>
       </div>
-      {/* ✅ Glossy Floating Chat Button with Left Message and Right Icon */}
+
       <div
         style={{
           position: "fixed",
@@ -799,7 +797,6 @@ No extra explanation or headings.
           zIndex: 9999,
         }}
       >
-        {/* Glossy Hover Message - LEFT SIDE */}
         <div
           className="chat-hover-msg"
           style={{
@@ -823,7 +820,6 @@ No extra explanation or headings.
           💬 Chat with AI
         </div>
 
-        {/* 🤖 Chat Icon - RIGHT SIDE */}
         <div
           onMouseEnter={() =>
             (document.getElementById("chat-msg").style.opacity = "1")
