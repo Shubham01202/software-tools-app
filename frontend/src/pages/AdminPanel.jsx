@@ -1,87 +1,24 @@
-/// src/pages/AdminPanel.jsx
-import React, { useEffect, useRef, useState } from "react";
-import {
-  Container,
-  Button,
-  Table,
-  Spinner,
-  Modal,
-  Form,
-  InputGroup,
-} from "react-bootstrap";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
-import html2pdf from "html2pdf.js";
-import EditToolModal from "../components/EditToolModal";
-import AddToolModal from "../components/AddToolModal";
-import { useNavigate } from "react-router-dom";
 
-function AdminPanel() {
-  const [tools, setTools] = useState([]);
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [editTool, setEditTool] = useState(null);
-  const [showAddModal, setShowAddModal] = useState(false);
+const AdminPanel = () => {
   const [compareTools, setCompareTools] = useState([]);
-  const [showChat, setShowChat] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [chatInput, setChatInput] = useState("");
-  const [chatLoading, setChatLoading] = useState(false);
-  const [aiLoadingId, setAiLoadingId] = useState(null);
-  const [expandedFeatures, setExpandedFeatures] = useState({});
-  const [showAllFeatures, setShowAllFeatures] = useState(false);
-  const [showAllSimilar, setShowAllSimilar] = useState(false);
   const [featureTable, setFeatureTable] = useState("");
   const [similarTable, setSimilarTable] = useState("");
   const [featureTableLoading, setFeatureTableLoading] = useState(false);
   const [similarTableLoading, setSimilarTableLoading] = useState(false);
 
-  const chatBottomRef = useRef(null);
-
-  // Used in handleCompare API if needed elsewhere
-  const selectedTools = compareTools.map((tool) => ({
-    name: tool.name,
-    vendor: tool.vendor,
-    deployed: tool.deployed,
-    tags: tool.tags,
-  }));
-
-  const handleCompare = async () => {
-    setFeatureTableLoading(true);
-    setSimilarTableLoading(true);
-
-    try {
-      const res = await axios.post("/api/compare", selectedTools);
-      setFeatureTable(res.data.featuresMarkdown);
-      setSimilarTable(res.data.similarMarkdown);
-    } catch (err) {
-      console.error("Comparison failed:", err);
-    } finally {
-      setFeatureTableLoading(false);
-      setSimilarTableLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTools();
-  }, []);
-
-  useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // Auto-fetch AI-generated Key Features & Similar Products when 2+ tools selected
   useEffect(() => {
     const fetchComparisonTables = async () => {
       if (compareTools.length < 2) return;
 
       setFeatureTableLoading(true);
       setSimilarTableLoading(true);
+
       const names = compareTools.map((t) => t.name).join(", ");
       const toolNames = compareTools.map((t) => t.name).join(" | ");
       const headerLine = `| Feature | ${toolNames} | Short Description |`;
-      const separatorLine = `|---------|${compareTools
-        .map(() => "---------")
-        .join("|")}|-------------------|`;
+      const separatorLine = `|---------|${compareTools.map(() => "---------").join("|")}|-------------------|`;
 
       try {
         const prompt1 = `
@@ -94,58 +31,43 @@ The table must have the following format:
 ${headerLine}
 ${separatorLine}
 
-Each row = one key feature. For each tool column, use only ✅ (for Yes) or ❌ (for No) based on feature availability.
-
-Each feature must include a short, one-line description in the 'Short Description' column.
-
-⚠️ Only return the markdown table rows. No headings, no bullet points, no extra explanation. Do not use bold or other formatting.
+Each row = one key feature.
+Use ✅ or ❌ for each tool.
+Each row must include a short description of the feature in the last column.
+No unnecessary explanations.
 `;
 
-  const res1 = await axios.post(
-  "https://software-tools-app-2.onrender.com/api/openai/chat",
-  {
-    prompt: prompt1,
-  }
-);
+        const prompt2 = `
+You are a product analyst.
 
-console.log("✅ Feature Table Response:", res1.data.reply);
-setFeatureTable(res1.data.reply);
-} catch (err) {
-  console.error("Failed to fetch key features:", err);
-} finally {
-  setFeatureTableLoading(false);
-}
+Generate a markdown table listing 3 similar products for each of these tools: ${names}.
 
-try {
-  const prompt2 = `
-You are a software analyst.
-
-For each of the following tools: ${names}, list 3 similar software products currently available in the market. Do not include the original tools.
-
-For each similar product, include:
-1. Similar Product Name
-2. A short description (1-2 lines)
-
-Return the output as a plain markdown table with two columns only:
+Format:
 
 | Similar Product | Short Description |
 |-----------------|-------------------|
 
-Do not use bold text or markdown formatting.
+Group them by tool internally. Do not repeat the tool names.
+No extra explanation or headings.
 `;
 
-  const res2 = await axios.post(
-    "https://software-tools-app-2.onrender.com/api/openai/chat",
-    {
-      prompt: prompt2,
-    }
-  );
-  setSimilarTable(res2.data.reply);
-} catch (err) {
-  console.error("Failed to fetch similar products:", err);
-} finally {
-  setSimilarTableLoading(false);
-}
+        const res1 = await axios.post("http://localhost:1000/api/openai/generate", {
+          prompt: prompt1,
+        });
+
+        const res2 = await axios.post("http://localhost:1000/api/openai/generate", {
+          prompt: prompt2,
+        });
+
+        setFeatureTable(res1.data.table || res1.data);
+        setSimilarTable(res2.data.table || res2.data);
+      } catch (err) {
+        console.error("AI table fetch error:", err);
+      } finally {
+        setFeatureTableLoading(false);
+        setSimilarTableLoading(false);
+      }
+    };
 
 
     fetchComparisonTables();
