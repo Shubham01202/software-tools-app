@@ -50,7 +50,8 @@ function EditToolModal({ show, onClose, tool, onSave }) {
 
     setLoadingAI(true);
     try {
-      const res = await axios.post("http://localhost:5000/api/openai/chat", {
+      const res = await axios.post("https://software-tools-app-2.onrender.com/api/openai/chat"
+, {
         prompt: `Give top 5 key features (markdown with **Feature Name:** description) of software tool "${formData.name}"`,
       });
 
