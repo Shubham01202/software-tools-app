@@ -101,21 +101,23 @@ Each feature must include a short, one-line description in the 'Short Descriptio
 ⚠️ Only return the markdown table rows. No headings, no bullet points, no extra explanation. Do not use bold or other formatting.
 `;
 
-        const res1 = await axios.post("https://software-tools-app-2.onrender.com/api/openai/chat"
- {
-          prompt: prompt1,
-        });
+  const res1 = await axios.post(
+  "https://software-tools-app-2.onrender.com/api/openai/chat",
+  {
+    prompt: prompt1,
+  }
+);
 
-        console.log("✅ Feature Table Response:", res1.data.reply);
-        setFeatureTable(res1.data.reply);
-      } catch (err) {
-        console.error("Failed to fetch key features:", err);
-      } finally {
-        setFeatureTableLoading(false);
-      }
+console.log("✅ Feature Table Response:", res1.data.reply);
+setFeatureTable(res1.data.reply);
+} catch (err) {
+  console.error("Failed to fetch key features:", err);
+} finally {
+  setFeatureTableLoading(false);
+}
 
-      try {
-        const prompt2 = `
+try {
+  const prompt2 = `
 You are a software analyst.
 
 For each of the following tools: ${names}, list 3 similar software products currently available in the market. Do not include the original tools.
@@ -132,17 +134,19 @@ Return the output as a plain markdown table with two columns only:
 Do not use bold text or markdown formatting.
 `;
 
-        const res2 = await axios.post("https://software-tools-app-2.onrender.com/api/openai/chat"
- {
-          prompt: prompt2,
-        });
-        setSimilarTable(res2.data.reply);
-      } catch (err) {
-        console.error("Failed to fetch similar products:", err);
-      } finally {
-        setSimilarTableLoading(false);
-      }
-    };
+  const res2 = await axios.post(
+    "https://software-tools-app-2.onrender.com/api/openai/chat",
+    {
+      prompt: prompt2,
+    }
+  );
+  setSimilarTable(res2.data.reply);
+} catch (err) {
+  console.error("Failed to fetch similar products:", err);
+} finally {
+  setSimilarTableLoading(false);
+}
+
 
     fetchComparisonTables();
   }, [compareTools]);
