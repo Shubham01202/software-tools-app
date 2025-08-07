@@ -75,8 +75,7 @@ No extra explanation or headings.
 
   const fetchTools = async () => {
     try {
-      const res = await axios.get("https://software-tools-app-2.onrender.com/api/tools
-");
+  const res = await axios.get("https://software-tools-app-2.onrender.com/api/tools");
       setTools(res.data);
     } catch (err) {
       console.error("Error fetching tools:", err.message);
