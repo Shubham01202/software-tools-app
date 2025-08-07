@@ -32,7 +32,8 @@ function AddToolModal({ show, onClose, onToolAdded }) {
     setError(null);
     setLoadingFeatures(true);
     try {
-      const res = await axios.post("http://localhost:5000/api/openai/chat", {
+      const res = await axios.post("https://software-tools-app-2.onrender.com/api/openai/chat"
+, {
         prompt: `Generate 5 key features for the software tool: ${name}`,
       });
       const text = res.data.reply || "";
