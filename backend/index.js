@@ -7,12 +7,12 @@ const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const protectedRoutes = require("./routes/protectedRoutes");
 const toolRoutes = require("./routes/toolRoutes");
-const adminAuthRoutes = require("./routes/adminAuthRoutes"); // ✅ Admin route
-const openaiRoutes = require("./routes/openaiRoutes"); // ✅ OpenAI route
+const adminAuthRoutes = require("./routes/adminAuthRoutes");
+const openaiRoutes = require("./routes/openaiRoutes");
 
 const app = express();
 
-// CORS setup for production (allow only your frontend domain)
+// CORS for production
 app.use(
   cors({
     origin: "https://software-tools-app-frontend.onrender.com",
@@ -22,17 +22,12 @@ app.use(
 
 app.use(express.json());
 
-// Test route (optional, uncomment if needed)
-// app.get("/", (req, res) => {
-//   res.send("API is working");
-// });
-
 // Routes
-app.use("/api/auth", authRoutes); // Regular user auth (if needed)
-app.use("/api/protected", protectedRoutes); // JWT-protected routes
-app.use("/api/tools", toolRoutes); // Developer tools
-app.use("/api/admin", adminAuthRoutes); // Admin login/signup routes
-app.use("/api/openai", openaiRoutes); // ✅ Chat with OpenAI
+app.use("/api/auth", authRoutes);
+app.use("/api/protected", protectedRoutes);
+app.use("/api/tools", toolRoutes);
+app.use("/api/admin", adminAuthRoutes);
+app.use("/api/openai", openaiRoutes);
 
 // MongoDB connection and server start
 mongoose
@@ -45,4 +40,5 @@ mongoose
     });
   })
   .catch((err) => {
-    console.error("MongoDB connection
+    console.error("MongoDB connection failed:", err.message);
+  });
