@@ -12,13 +12,19 @@ const openaiRoutes = require("./routes/openaiRoutes"); // ✅ OpenAI route
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// CORS setup for production (allow only your frontend domain)
+app.use(
+  cors({
+    origin: "https://software-tools-app-frontend.onrender.com",
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
-// Test route
+// Test route (optional, uncomment if needed)
 // app.get("/", (req, res) => {
-//   res.send(" API is working");
+//   res.send("API is working");
 // });
 
 // Routes
@@ -35,9 +41,8 @@ mongoose
     console.log("MongoDB connected");
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
-      console.log(` Server running on http://localhost:${PORT}`);
+      console.log(`Server running on http://localhost:${PORT}`);
     });
   })
   .catch((err) => {
-    console.error(" MongoDB connection failed:", err.message);
-  });
+    console.error("MongoDB connection
